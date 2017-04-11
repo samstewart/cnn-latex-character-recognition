@@ -1,0 +1,152 @@
+%23: 7, Munkres \textsection 24: 1, 3, 10e
+% v0.04 by Eric J. Malm, 10 Mar 2005
+\documentclass[12pt,letterpaper,boxed]{article}
+
+
+
+% set 1-inch margins in the document
+\usepackage{enumerate}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{marginnote}
+\usepackage{float}
+
+
+\input{macros.tex}
+
+% \newtheorem{lemma}[section]{Lemma}
+
+\usepackage{graphicx}
+\usepackage{float}
+
+% Note: for other writers, please take a look at the shortcuts I have already defined above.
+
+\author{Samuel Stewart}
+\title{Recognizing Mathematical Symbols with a Sparse CNN}
+\maketitle
+% TODO: employ roman numerals in the problem 
+\begin{document}
+
+\section{Problem}
+Goal: beat prediction accuracy \emph{and} speed of Haskell backend using dynamic time warp.
+
+Hypothesis: Convolution neural network is better at recognizing characters. Sparsity enables speedup.
+
+\section{Introduction to Neural Networks}
+
+\subsection{Starting with a Single Neuron}
+Abstractly, a neuron receives an input vector $\overline{x} \in \R^n$ and outputs a real number: a large positive number indicates activation, and a small negative number indicates deactive. A neural network consists of millions of such neurons, strung together carefully. 
+
+% picture of neuron from neural network? Hand drawn or in Omnigraffle.
+
+A neuron has the following parameters
+
+\begin{enumerate}
+	\item A shift vector $\overline{b}$for the input vector
+	\item A vector $\overline{w}$ of weights for the input vector
+	\item A mapping $f : \R \to \R$ that describes the output of the neuron (intuitively, when the neuron \textbf{activates}).
+\end{enumerate}
+
+The output of the neuron is then simply
+\[
+	f(\overline{w} \cdot (\overline{x} + \overline{b})).
+\]
+
+A single neuron is quite powerful and a good place to begin. One can rephrase other classifiers \cite{andrej2017} within this framework. For example, if one chooses
+\[
+	f(t) = \frac{1}{1 + e^{-t}}
+\]
+
+% include graph of logistic function on the right and the equation on the left
+and tune the parameters appropriately, then one is performing \textit{logistic regression}. For real neural networks, the function
+\[
+	f(t) = \max(0, t)
+\]
+
+% picture of max function on the right and equation on the left
+is more accurate (\cite{andrej2017}). 
+
+As a simple example, consider the problem of predicting whether a given height measurement is of a man or a woman. With the logistic function as above, one can build a simple classifier in Mathematica.
+
+% Get some height data (or generate it) in Mathematica. Compute the loss function and generate a graph.
+
+\subsection{A Geometric Viewpoint}
+
+
+Note: one can view classification problems as really just trying to decompose image into basis elements. Since each row of W is a dot product against the input data, we are really detecting the high dimensional *angle* and offset. Everything is really just high dimensional geometry.
+
+\subsection{Neural Networks as Nonlinear Combinations of Matrix Multiplications}
+
+\subsection{Graph Representation}
+
+\section{Previous Work}
+
+\section{The Problem}
+
+\section{Methodology}
+We requested the full $210,454$ samples from the author of the popular online tool Detexify which converts hand-drawn \LaTeX characters to codes [cite] using an algorithm called dynamic time warp [cite dynamic time warp]. Each sampled consists of a classification (the \LaTeX symbol code) and an array of timestamped coordinates representing the stroke pattern for a given sample. Preprocessing required converting each sample to a $200 \times 200$ grayscale image by rendering a thick line connecting the sampled points via Python Image Library [cite]. 
+
+Using the Python frameworks \textbf{Lasagne} and \textbf{nolearn}, we implemented a network with the following structure
+
+% Diagram of the network we implemented. Can we just do a network with no hidden layers? Probably
+
+We reserved one quarter of the data to test generalizability and trained the network on the remainder. The following figure shows our loss function on the training data
+
+% Loss function figure
+
+The accuracy on the out of sample data was $100\%$
+
+\subsection{Evaluation of a network with linear algebra}
+
+\subsection{Density of neural networks}
+
+\section{Convolution Neural Networks}
+
+\subsection{Why are CNNs different than vanillas CNN?}
+1. "better" in some ill-defined sense. I assume classification accuracy?
+2. General idea appears to be that
+
+\section{Exploiting Sparsity in Convolutional Neural Networks}
+
+	\subsection{Training the Network}
+
+	\subsection{Cost of Accuracy}
+
+\section{Questions while learning}
+1. How to select proper activation function?
+2. How can one rephrase this problem mathematically?
+3. Why can't neurons have multiple outputs?
+4. Are there results connecting the number of samples with the accuracy / generalizability of the network?
+
+\section{Reproducible Research Questions}
+
+1. What did I do?
+2. Why did I do it?
+3. How did I set up everything at the time of the analysis?
+4. When did I make changes, and what were they?
+5. Who needs to access it, and how can I get it to them?
+
+\section{References}
+ConvNetJS (playground for neural nets)
+http://cs.stanford.edu/people/karpathy/convnetjs/
+
+andrej2017
+Andrej Karpathy. http://cs231n.github.io/neural-networks-1/
+
+(Spatially-sparse convolutional neural networks) https://arxiv.org/abs/1409.6070
+
+VisTrails workflow management
+https://www.vistrails.org/index.php/Main_Page
+
+Proof of universality of neural networks:
+http://neuralnetworksanddeeplearning.com/chap4.html
+
+
+Pandas for data cleaning
+
+http://t-redactyl.io/blog/2016/10/a-crash-course-in-reproducible-research-in-python.html
+
+IPython
+https://ipython.org/documentation.html
+\end{document}
