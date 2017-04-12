@@ -36,6 +36,8 @@ bash:
 rm detexify.sql
 `
 
+3. Import into MongoDB using the given format:
+
 # Representing Data
 
 In the long run, we'll need to turn the strokes into images.
