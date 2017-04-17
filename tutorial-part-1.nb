@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[      5878,        183]
-NotebookOptionsPosition[      5374,        159]
-NotebookOutlinePosition[      5733,        175]
-CellTagsIndexPosition[      5690,        172]
+NotebookDataLength[      5102,        145]
+NotebookOptionsPosition[      4559,        120]
+NotebookOutlinePosition[      4918,        136]
+CellTagsIndexPosition[      4875,        133]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -46,114 +46,75 @@ Cell[BoxData[{
   RowBox[{"bias", " ", "=", " ", ".1"}], ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"input", " ", "=", " ", ".4"}], ";"}], "\[IndentingNewLine]", 
- RowBox[{"BarChart", "[", 
-  RowBox[{"{", 
-   RowBox[{"input", ",", " ", 
-    RowBox[{"activationFunction", " ", "/.", " ", 
+ RowBox[{"Manipulate", "[", 
+  RowBox[{
+   RowBox[{"BarChart", "[", 
+    RowBox[{
      RowBox[{"{", 
-      RowBox[{"x", "\[Rule]", " ", 
-       RowBox[{"weight", " ", "*", " ", "input"}]}], "}"}]}]}], "}"}], 
-  "]"}]}], "Input",
+      RowBox[{"input", ",", " ", 
+       RowBox[{"activationFunction", " ", "/.", " ", 
+        RowBox[{"{", 
+         RowBox[{"x", "\[Rule]", " ", 
+          RowBox[{
+           RowBox[{"weight", " ", "*", " ", "input"}], " ", "+", " ", "b"}]}],
+          "}"}]}]}], "}"}], ",", " ", 
+     RowBox[{"ChartStyle", "\[Rule]", "\"\<DarkRainbow\>\""}]}], "]"}], ",", 
+   " ", 
+   RowBox[{"{", 
+    RowBox[{"input", ",", " ", 
+     RowBox[{"-", "10"}], ",", " ", "10"}], "}"}]}], "]"}]}], "Input",
  CellChangeTimes->{{3.7009225964450607`*^9, 3.7009226886925364`*^9}, {
-   3.7009227768510437`*^9, 3.7009228215330553`*^9}, 3.7009228647795*^9}],
+  3.7009227768510437`*^9, 3.7009228215330553`*^9}, {3.7009228647795*^9, 
+  3.700922877049698*^9}, {3.700922919965022*^9, 3.700922924419627*^9}, {
+  3.700922968628358*^9, 3.700922969308695*^9}}],
 
 Cell[BoxData[
- GraphicsBox[{
-   {Opacity[0], PointBox[{0.5064116575591986, 0.}]}, {{}, 
-    {RGBColor[0.982864, 0.7431472, 0.3262672], EdgeForm[{Opacity[
-     0.6859999999999999], Thickness[Small]}], 
-     {RGBColor[0.982864, 0.7431472, 0.3262672], EdgeForm[{Opacity[
-      0.6859999999999999], Thickness[Small]}], 
-      TagBox[
-       TooltipBox[
-        TagBox[
-         DynamicBox[{
-           FEPrivate`If[
-            CurrentValue["MouseOver"], 
-            EdgeForm[{
-              GrayLevel[0.5], 
-              AbsoluteThickness[1.5], 
-              Opacity[0.66]}], {}, {}], 
-           
-           RectangleBox[{0.5446265938069217, 0.}, {1.4553734061930783`, 0.4}, 
-            "RoundingRadius" -> 0]},
-          
-          ImageSizeCache->{{23.190223148082765`, 
-           177.17504555234308`}, {-100.96593754324162`, 100.11762415246402`}}],
-         StatusArea[#, 0.4]& ,
-         TagBoxNote->"0.4"],
-        StyleBox["0.4`", {}, StripOnInput -> False]],
-       Annotation[#, 
-        Style[0.4, {}], "Tooltip"]& ]}, 
-     {RGBColor[0.982864, 0.7431472, 0.3262672], EdgeForm[{Opacity[
-      0.6859999999999999], Thickness[Small]}], 
-      TagBox[
-       TooltipBox[
-        TagBox[
-         DynamicBox[{
-           FEPrivate`If[
-            CurrentValue["MouseOver"], 
-            EdgeForm[{
-              GrayLevel[0.5], 
-              AbsoluteThickness[1.5], 
-              Opacity[0.66]}], {}, {}], 
-           
-           RectangleBox[{1.5446265938069217`, 0.}, {2.455373406193078, 
-            0.03997868031116358}, "RoundingRadius" -> 0]},
-          
-          ImageSizeCache->{{191.7165581479606, 345.7013805522209}, {
-           79.56995893069609, 100.11762415246402`}}],
-         StatusArea[#, 0.03997868031116358]& ,
-         TagBoxNote->"0.03997868031116358"],
-        StyleBox["0.03997868031116358`", {}, StripOnInput -> False]],
-       Annotation[#, 
-        Style[0.03997868031116358, {}], "Tooltip"]& ]}}, {}, {}}, {}, {}, 
-   StyleBox[
-    StyleBox[{
-      {Thickness[Tiny], 
-       LineBox[{{0.5064116575591986, 0.}, {2.4943526411657557`, 0.}}], 
-       StyleBox[{}, "GraphicsLabel",
-        StripOnInput->False]}, 
-      StyleBox[{
-        {Thickness[Tiny], 
-         LineBox[{{0.5446265938069217, 0.}, 
-           Offset[{-1.102182119232618*^-15, -6.}, {0.5446265938069217, 0.}]}],
-          LineBox[{{2.455373406193078, 0.}, 
-           Offset[{-1.102182119232618*^-15, -6.}, {2.455373406193078, 
-            0.}]}], {{}, {}, {}, {}}}, 
-        StyleBox[{}, "GraphicsLabel",
-         StripOnInput->False]}, "GraphicsTicks",
-       StripOnInput->False]},
-     Antialiasing->False], "GraphicsAxes",
-    StripOnInput->False]},
-  AspectRatio->NCache[GoldenRatio^(-1), 0.6180339887498948],
-  Axes->{False, True},
-  AxesLabel->{None, None},
-  AxesOrigin->{0.5064116575591986, 0.},
-  CoordinatesToolOptions:>{"DisplayFunction" -> ({
-      Identity[
-       Part[#, 1]], 
-      Identity[
-       Part[#, 2]]}& ), "CopiedValueFunction" -> ({
-      Identity[
-       Part[#, 1]], 
-      Identity[
-       Part[#, 2]]}& )},
-  FrameLabel->{{None, None}, {None, None}},
-  FrameTicks->{{Automatic, Automatic}, {Automatic, Automatic}},
-  GridLines->{None, None},
-  GridLinesStyle->Directive[
-    GrayLevel[0.5, 0.4]],
-  PlotRange->{{All, All}, {All, All}},
-  PlotRangePadding->{{
-     Scaled[0.02], 
-     Scaled[0.02]}, {
-     Scaled[0.02], 
-     Scaled[0.05]}},
-  Ticks->{None, Automatic}]], "Output",
- CellChangeTimes->{3.700922601148407*^9, 3.700922822668847*^9, 
-  3.7009228652035103`*^9}]
-}, Open  ]]
+ TagBox[
+  StyleBox[
+   DynamicModuleBox[{$CellContext`input$$ = 9.400000000000002, 
+    Typeset`show$$ = True, Typeset`bookmarkList$$ = {}, 
+    Typeset`bookmarkMode$$ = "Menu", Typeset`animator$$, Typeset`animvar$$ = 
+    1, Typeset`name$$ = "\"untitled\"", Typeset`specs$$ = {{
+      Hold[$CellContext`input$$], -10, 10}}, Typeset`size$$ = {
+    360., {110., 114.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
+    Typeset`skipInitDone$$ = True, $CellContext`input$14753$$ = 0}, 
+    DynamicBox[Manipulate`ManipulateBoxes[
+     1, StandardForm, "Variables" :> {$CellContext`input$$ = -10}, 
+      "ControllerVariables" :> {
+        Hold[$CellContext`input$$, $CellContext`input$14753$$, 0]}, 
+      "OtherVariables" :> {
+       Typeset`show$$, Typeset`bookmarkList$$, Typeset`bookmarkMode$$, 
+        Typeset`animator$$, Typeset`animvar$$, Typeset`name$$, 
+        Typeset`specs$$, Typeset`size$$, Typeset`update$$, Typeset`initDone$$,
+         Typeset`skipInitDone$$}, "Body" :> BarChart[{$CellContext`input$$, 
+         ReplaceAll[$CellContext`activationFunction, {$CellContext`x -> \
+$CellContext`weight $CellContext`input$$}]}, ChartStyle -> "DarkRainbow"], 
+      "Specifications" :> {{$CellContext`input$$, -10, 10}}, "Options" :> {}, 
+      "DefaultOptions" :> {}],
+     ImageSizeCache->{405., {154., 159.}},
+     SingleEvaluation->True],
+    Deinitialization:>None,
+    DynamicModuleValues:>{},
+    SynchronousInitialization->True,
+    UndoTrackedVariables:>{Typeset`show$$, Typeset`bookmarkMode$$},
+    UnsavedVariables:>{Typeset`initDone$$},
+    UntrackedVariables:>{Typeset`size$$}], "Manipulate",
+   Deployed->True,
+   StripOnInput->False],
+  Manipulate`InterpretManipulate[1]]], "Output",
+ CellChangeTimes->{
+  3.700922601148407*^9, 3.700922822668847*^9, {3.7009228652035103`*^9, 
+   3.7009228797233458`*^9}, 3.7009229247394857`*^9}]
+}, Open  ]],
+
+Cell["\<\
+Every neuron accepts weighted and biased inputs, runs them through the \
+activation function, and returns an output. One can rephrase logistic \
+regression as a single neuron, but the real power appears when we chain the \
+neurons together. \
+\>", "Text",
+ CellChangeTimes->{{3.7009229558945103`*^9, 3.70092300568264*^9}, {
+  3.7009230810880413`*^9, 3.7009232591836243`*^9}}]
 }, Open  ]]
 }, Open  ]]
 },
@@ -180,9 +141,10 @@ Cell[CellGroupData[{
 Cell[718, 27, 99, 1, 64, "Section"],
 Cell[820, 30, 172, 4, 30, "Text"],
 Cell[CellGroupData[{
-Cell[1017, 38, 806, 19, 97, "Input"],
-Cell[1826, 59, 3508, 95, 234, "Output"]
-}, Open  ]]
+Cell[1017, 38, 1249, 30, 114, "Input"],
+Cell[2269, 70, 1862, 36, 330, "Output"]
+}, Open  ]],
+Cell[4146, 109, 385, 7, 68, "Text"]
 }, Open  ]]
 }, Open  ]]
 }

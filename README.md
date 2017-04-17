@@ -50,3 +50,8 @@ Data structure for MongoDB. Each sample should be
 		[x_1, y_1, t_1], ...
 	]
 }
+
+We generate an image from each entry using the Python image library [add as dependency].
+
+`cd code/data-cleaning && python render-samples-to-images.py`
+
