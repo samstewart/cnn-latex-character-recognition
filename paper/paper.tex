@@ -29,77 +29,194 @@
 \begin{document}
 
 \section{Problem}
-Goal: beat prediction accuracy \emph{and} speed of Haskell backend using dynamic time warp.
+	Goal: beat prediction accuracy \emph{and} speed of Haskell backend using dynamic time warp.
 
-Hypothesis: Convolution neural network is better at recognizing characters. Sparsity enables speedup.
+	Hypothesis: Convolution neural network is better at recognizing characters. Sparsity enables speedup.
 
-\section{Introduction to Neural Networks}
+\section{Mathematical View of Neural Networks}
 
-\subsection{Starting with a Single Neuron}
-Abstractly, a neuron receives an input vector $\overline{x} \in \R^n$ and outputs a real number: a large positive number indicates activation, and a small negative number indicates deactive. A neural network consists of millions of such neurons, strung together carefully. 
+	\subsubsection{Constructing a Neural Network}
 
-% picture of neuron from neural network? Hand drawn or in Omnigraffle.
+	Mathematically, one can view a neural network to be determiend by the following
+	\begin{enumerate}
+		\item An nonlinear ``activation function'' $f : \R \to [0, 1]$.
+		\item A series of affine transformations 
+		$A_1 \in \textrm{Aff}(\R^{n_1}, \R^{n_2}), A_2 \in \textrm{Aff}(\R^{n_2}, \R^{n_3}), \ldots, A_m \in \textrm{Aff}(\R^{n_{m - 1}}, \R^{n_m})$
+		between a series of affine spaces $\R^{n_1}, \ldots, \R^{n_m}$.
+	\end{enumerate}
+	Then the neural network is a map $F : \R^{n_1} \to \R^{n_m}$ given by the composition of the nonlinear activation function and the affine transformations
+	\[
+		F = f \circ A_m \circ A_{m - 1} \circ f \circ A_{m - 2} \circ \cdots \circ A_1
+	\]
+	where it is understood that $f$ acts coordinatewise on the output of each affine transformation. 
 
-A neuron has the following parameters
+	From a probabilistic point of view, to classify an object $x \in \R^{n_1}$, one considers the ``probabilities'' given by the vector $F(x) \in \R^{n_m}$ that $x$ lies in each of $n_m$ categories. 
 
-\begin{enumerate}
-	\item A shift vector $\overline{b}$for the input vector
-	\item A vector $\overline{w}$ of weights for the input vector
-	\item A mapping $f : \R \to \R$ that describes the output of the neuron (intuitively, when the neuron \textbf{activates}).
-\end{enumerate}
-
-The output of the neuron is then simply
-\[
-	f(\overline{w} \cdot (\overline{x} + \overline{b})).
-\]
-
-A single neuron is quite powerful and a good place to begin. One can rephrase other classifiers \cite{andrej2017} within this framework. For example, if one chooses
-\[
-	f(t) = \frac{1}{1 + e^{-t}}
-\]
-
-% include graph of logistic function on the right and the equation on the left
-and tune the parameters appropriately, then one is performing \textit{logistic regression}. For real neural networks, the function
-\[
-	f(t) = \max(0, t)
-\]
-
-% picture of max function on the right and equation on the left
-is more accurate (\cite{andrej2017}). 
-
-As a simple example, consider the problem of predicting whether a given height measurement is of a man or a woman. With the logistic function as above, one can build a simple classifier in Mathematica.
-
-% Get some height data (or generate it) in Mathematica. Compute the loss function and generate a graph.
-
-\subsection{A Geometric Viewpoint}
+	The addition of the activation function $f$ enables fitting of \textit{nonlinear} boundaries between the training points. In applications, one \textit{chooses} an activation function $f$ (discussed below) and then attempts to \textit{learn} the ``best'' (as measured by some energy functional) series of affine transformations for a given set of training data. The machine learning literature calls this process ``weight tuning,'' ``training,'' or ``backpropegation.''
 
 
-Note: one can view classification problems as really just trying to decompose image into basis elements. Since each row of W is a dot product against the input data, we are really detecting the high dimensional *angle* and offset. Everything is really just high dimensional geometry.
+	\subsection{Training a Neural Network}
+	It was shown in [1990?] that one can approximate a function $G$ with a neural network $F$ [cite universality paper]. In the machine learning language, given a large enough training set, one can ``learn'' the underlying classification $G$ to arbitrary accuracy. However, just as indicator functions are dense in $L^2$, this result is of limited practical use since it does not answer questions of convergence.
 
-\subsection{Neural Networks as Nonlinear Combinations of Matrix Multiplications}
+	In practice, one ``trains'' a neural network (or equivalently ``searches'' for a close neural network $F$ to $G$ in some function space) by minimizing some loss function $E(F) : \R$ that measures how will the network ``fits'' the given training data.
 
-\subsection{Graph Representation}
+	There are several such measures, but an easy metric is the $\ell^2$ distance. Given a set of labeled data $(x_i, y_i)$, one defines
+	\[
+		E(F) = \sum_i^N \abs{F(x_i) - y_i}^2.
+	\]
+
+	Training is then quite simple: find the neural network $F$ that \textit{minimizes} $E$.
+
+	A common approach is to apply some form of the \textit{gradient descent} algorithm.
+
+	The training algorithm is then the following
+	\begin{enumerate}
+		\item Initialize the gradient descent algorithm at $F_0$.
+		\item For the total number of backpropegations
+			\begin{enumerate}
+				\item Use the training set to classify all the data points $x_i \in \R^{n_1}$.
+				\item Compute the gradient of $E$ with respect to the weights and biases that describe the affine transformations.
+				\item Adjust the weights and biases proportionally to the gradient.
+			\end{enumerate}
+	\end{enumerate}
+
+	``Well-trained'' neural networks are those that minimize $E$. 
+		\subsubsection{Backpropegation}
+		Computing the gradient of $E$ with respect to the weights and biases is called ``backpropegation'' in machine learning. However, it is nothing but the multivariable chain rule. 
+
+		That is, since
+		\[
+			E(F) = \sum_i^N \abs{F(x_i) - y_i}^2
+		\]
+		then with $(w,b)$ a vector of all the weights and biases, we have
+		\[
+			\nabla_{(w, b)} E(F) = \sum_i^N 2 \abs{F(x_i) - y_i} \nabla_{(w, b)} F(x_i).
+		\]
+
+		We know how to compute the gradient of $F$ since it is a composition of affine transformations interwoven with the coordinatewise activation function. That is, the multivariabel chain rule gives
+		\[
+			\nabla_{(w, b)} F = \nabla f \cdot \nabla A_{m - 1} \cdot \nabla f \cdot \nabla A_{m - 2} \cdot f \cdots \nabla A_1. 
+		\]
+		Computing the derivatives of affine transformations is naturally quite easy when represented as matrices. Sincen $f$ is fixed, its derivative is also easily computed. The result, then, is simply a series of matrix multiplications.
+
+		The process is called backpropegation because one must evaluate the derivatives starting at the output of the network and ``propegating'' the computation to the initial layers. Of course, there are algorithmic considerations when computing the matrix product, but the theory is clear.
+
+	\subsection{Starting with a Single Neuron}
+		Abstractly, a neuron receives an input vector $\overline{x} \in \R^n$ and outputs a real number: a large positive number indicates activation, and a small negative number indicates deactive. A neural network consists of millions of such neurons, strung together carefully. 
+
+		% picture of neuron from neural network? Hand drawn or in Omnigraffle.
+
+		A neuron has the following parameters
+
+		\begin{enumerate}
+			\item A shift vector $\overline{b}$for the input vector
+			\item A vector $\overline{w}$ of weights for the input vector
+			\item A mapping $f : \R \to \R$ that describes the output of the neuron (intuitively, when the neuron \textbf{activates}).
+		\end{enumerate}
+
+		The output of the neuron is then simply
+		\[
+			f(\overline{w} \cdot (\overline{x} + \overline{b})).
+		\]
+
+		A single neuron is quite powerful and a good place to begin. One can rephrase other classifiers \cite{andrej2017} within this framework. For example, if one chooses
+		\[
+			f(t) = \frac{1}{1 + e^{-t}}
+		\]
+
+		% include graph of logistic function on the right and the equation on the left
+		and tune the parameters appropriately, then one is performing \textit{logistic regression}. For real neural networks, the function
+		\[
+			f(t) = \max(0, t)
+		\]
+
+		% picture of max function on the right and equation on the left
+		is more accurate (\cite{andrej2017}). 
+
+		As a simple example, consider the problem of predicting whether a given height measurement is of a man or a woman. With the logistic function as above, one can build a simple classifier in Mathematica.
+
+		% Get some height data (or generate it) in Mathematica. Compute the loss function and generate a graph.
+
+	\subsection{A Geometric Viewpoint}
+		A neural network is a series of affine transformations combined with nonlinear squishes (sigmoid function).
+
+		Affine transformations allows us to represent any hyperplane.
+
+		Activation function allows us to bend hyperplanes.
+
+		The problem of training a neural network can be viewed as finding a best approximation in a subspace of a function space (what space exactly?)
+
+		The subspace of all possible functions represented by a neural net is what?
+
+	Note: one can view classification problems as really just trying to decompose image into basis elements. Since each row of W is a dot product against the input data, we are really detecting the high dimensional *angle* and offset. Everything is really just high dimensional geometry.
+
+	\subsection{Chaining Two Neurons}
+
+		\subsubsection{Backpropegation}
+			The multivariable chain rule propegates backwards while function composition goes forwards.
+
+		\subsection{Graph Representation}
+			Can think of every function evaluation as propegating information through a graph structure.
+
+\section{Loss Functions}
+	\subsection{Cross-Entropy Loss Function}
+
+	\subsection{Softmax}
+		Use
+		\[
+			\sum_{j \neq y_j} \max \{0, f_j - f_{y_j} + 1\}
+		\]
+
+		% insert nice visualization of this
+	\subsection{Regression}
+		Consider the $L^2$ distance.
+
+\section{Good Examples to Think About}
+	\subsection{Backpropegation}
+		Just think about multiplication and addition since it models the full dot product.
+
+	\subsection{Model neural net}
+		Toy model of a neural net:
+			Build a neural net to learn the XOR function.
+		Should be a network with only one hidden layer. How many nodes in that layer? I suppose we can choose this arbitrarily.
 
 \section{Previous Work}
 
 \section{The Problem}
+	Our goal is to train a CNN to recognize handwritten \LaTeX math symbols. This is a simple classification problem where the program assigns each sample a string with the \LaTeX character code.
+
+	% example of handwritten latex code along with the given textual code.
 
 \section{Methodology}
-We requested the full $210,454$ samples from the author of the popular online tool Detexify which converts hand-drawn \LaTeX characters to codes [cite] using an algorithm called dynamic time warp [cite dynamic time warp]. Each sampled consists of a classification (the \LaTeX symbol code) and an array of timestamped coordinates representing the stroke pattern for a given sample. Preprocessing required converting each sample to a $200 \times 200$ grayscale image by rendering a thick line connecting the sampled points via Python Image Library [cite]. 
+		We requested the full $210,454$ samples from the author of the popular online tool Detexify which converts hand-drawn \LaTeX characters to codes [cite] using an algorithm called dynamic time warp [cite dynamic time warp]. Each sampled consists of a classification (the \LaTeX symbol code) and an array of timestamped coordinates representing the stroke pattern for a given sample. Preprocessing required converting each sample to a $200 \times 200$ grayscale image by rendering a thick line connecting the sampled points via Python Image Library [cite]. 
 
-Using the Python frameworks \textbf{Lasagne} and \textbf{nolearn}, we implemented a network with the following structure
+		Using the Python frameworks \textbf{Lasagne} and \textbf{nolearn}, we implemented a network with the following structure
 
-% Diagram of the network we implemented. Can we just do a network with no hidden layers? Probably
+		% Diagram of the network we implemented. Can we just do a network with no hidden layers? Probably
 
-We reserved one quarter of the data to test generalizability and trained the network on the remainder. The following figure shows our loss function on the training data
+		We reserved one quarter of the data to test generalizability and trained the network on the remainder. The following figure shows our loss function on the training data
 
-% Loss function figure
+		% Loss function figure
 
-The accuracy on the out of sample data was $100\%$
+		The accuracy on the out of sample data was $100\%$
 
-\subsection{Evaluation of a network with linear algebra}
+	\section{Network Structure}
+		For the basic network, we have a series of 
 
-\subsection{Density of neural networks}
+	\subsection{Evaluation of a Network with Linear Algebra}
+		For nodes in the same layer, put each set of weights into a matrix $W$ as rows padding with zeros as necessary (will be sparse)?. Columns will correspond to number of inputs to the entire layer (sum total of number of inputs to each node).
+
+		Then when layer $i$ receives input vector $x_i$, compute weighting and biasing as $W \cdot x_i + b$ where $b$ is a vector of biases.
+
+		Finally, do the nonlinear transformation via the activation function $\sigma$ (element-wise) as $\sigma(W \cdot x_i + b)$.
+
+		Can chain layers together by composing this operation.
+
+		Each layer can thus be seen as an affine transformation followed by a nonlinear squish in each coordinate.
+
+		This is apparently enough to represent a large family of continuous functions.
+
+	\subsection{Density of neural networks}
 
 \section{Convolution Neural Networks}
 
