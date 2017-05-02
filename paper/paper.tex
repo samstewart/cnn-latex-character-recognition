@@ -8,10 +8,12 @@
 \usepackage{enumerate}
 \usepackage{amsthm}
 \usepackage{amsmath}
+\usepackage[margin=.5in]{geometry}
 \usepackage{amssymb}
 \usepackage{marginnote}
 \usepackage{float}
 \usepackage{url}
+\usepackage{listings}
 
 \input{macros.tex}
 
@@ -28,37 +30,32 @@
 % TODO: employ roman numerals in the problem 
 \begin{document}
 \maketitle
-\section{Problem}
-	Goal: beat prediction accuracy \emph{and} speed of Haskell backend using dynamic time warp.
 
-	Hypothesis: Convolution neural network is better at recognizing characters. Sparsity enables speedup.
+\begin{abstract}
+Inspired by a recent application of sparse matrix multiplication [cite sparse paper],  we build a simple convolution neural network for recognizing a subset of LaTeX characters. Using a training set obtained from the author of the popular web tool ``Detexify,'' our network achieves $87\%$ accuracy. In this paper, we discuss basic neural networks, their generalization to convolutional neural networks, and the application of sparse decompositions.
+\end{abstract}
 
-\section{Mathematical View of Neural Networks}
+\section{Mathematics of Neural Networks}
 
 	\subsubsection{Constructing a Neural Network}
-
-	Mathematically, one can view a neural network to be determiend by the following
+	Dispensing with the oversimplifying analogies with the wonderfully complex human brain, one can view a neural network as a function defined by two things:
 	\begin{enumerate}
-		\item An nonlinear ``activation function'' $f : \R \to [0, 1]$.
-		\item A series of affine transformations 
-		$A_1 \in \textrm{Aff}(\R^{n_1}, \R^{n_2}), A_2 \in \textrm{Aff}(\R^{n_2}, \R^{n_3}), \ldots, A_m \in \textrm{Aff}(\R^{n_{m - 1}}, \R^{n_m})$
-		between a series of affine spaces $\R^{n_1}, \ldots, \R^{n_m}$.
+		\item An nonlinear ``activation function'' $f : \R \to [0, 1]$ (common functions include $f(x) = \max(x, 0)$ or $f(x) = 1 / (1 + e^{-x})$
+		\item A series of transforms $A_i x + b$ where $A_i$ are matrices representing linear operators between a series of spaces of vary dimension.
 	\end{enumerate}
-	Then the neural network is a map $F : \R^{n_1} \to \R^{n_m}$ given by the composition of the nonlinear activation function and the affine transformations
+	Then the neural network is a map $F : \R^n \to \R^\ell$ given by the composition of the nonlinear activation function and the linear operators
 	\[
-		F = f \circ A_m \circ A_{m - 1} \circ f \circ A_{m - 2} \circ \cdots \circ A_1
+		F = f  \circ A_m \circ A_{m - 1} \circ f \circ A_{m - 2} \circ \cdots \circ A_1
 	\]
-	where it is understood that $f$ acts coordinatewise on the output of each affine transformation. 
-
-	From a probabilistic point of view, to classify an object $x \in \R^{n_1}$, one considers the ``probabilities'' given by the vector $F(x) \in \R^{n_m}$ that $x$ lies in each of $n_m$ categories. 
-
-	The addition of the activation function $f$ enables fitting of \textit{nonlinear} boundaries between the training points. In applications, one \textit{chooses} an activation function $f$ (discussed below) and then attempts to \textit{learn} the ``best'' (as measured by some energy functional) series of affine transformations for a given set of training data. The machine learning literature calls this process ``weight tuning,'' ``training,'' or ``backpropegation.''
-
-
+	where it is understood that $f$ acts coordinate-wise on the output of each linear transformation. 
+	From a probabilistic point of view, the output $F(x) \in \R^\ell$ represents the probabilities that an object with features $x \in \R^n$ lies in each of $\ell$ classes.
+	
+	The addition of the activation function $f$ enables fitting of \textit{nonlinear} boundaries between the training points. In applications, one \textit{chooses} an activation function $f$ (discussed below) and then attempts to \textit{learn} the ``best'' (as measured by some energy functional) series of linear transformations for a given set of training data. The machine learning literature calls this process ``weight tuning,'' ``training,'' or ``backpropagation.'' In the literature, for every linear transformation $A_i x + b$, the matrix $A_i$ contains the ``weights'' and the vector $b$ the ``biases.'' The number of linear transformations $A_i$ is the number of ``layers'' of the neural network. More layers correspond to better approximations of the learned function, though the relationship is poorly understood in general. Deep learning is nothing but many layers and thus many weights one must tune.
+	
 	\subsection{Training a Neural Network}
 	It was shown in [1990?] that one can approximate a function $G$ with a neural network $F$ [cite universality paper]. In the machine learning language, given a large enough training set, one can ``learn'' the underlying classification $G$ to arbitrary accuracy. However, just as indicator functions are dense in $L^2$, this result is of limited practical use since it does not answer questions of convergence.
 
-	In practice, one ``trains'' a neural network (or equivalently ``searches'' for a close neural network $F$ to $G$ in some function space) by minimizing some loss function $E(F) : \R$ that measures how will the network ``fits'' the given training data.
+	In practice, one trains a neural by minimizing some loss function $E(F) : \R$ that measures how will the network ``fits'' the given training data.
 
 	There are several such measures, but an easy metric is the $\ell^2$ distance. Given a set of labeled data $(x_i, y_i)$, one defines
 	\[
@@ -68,21 +65,8 @@
 	Training is then quite simple: find the neural network $F$ that \textit{minimizes} $E$.
 
 	A common approach is to apply some form of the \textit{gradient descent} algorithm.
-
-	The training algorithm is then the following
-	\begin{enumerate}
-		\item Initialize the gradient descent algorithm at $F_0$.
-		\item For the total number of backpropegations
-			\begin{enumerate}
-				\item Use the training set to classify all the data points $x_i \in \R^{n_1}$.
-				\item Compute the gradient of $E$ with respect to the weights and biases that describe the affine transformations.
-				\item Adjust the weights and biases proportionally to the gradient.
-			\end{enumerate}
-	\end{enumerate}
-
-	``Well-trained'' neural networks are those that minimize $E$. 
-		\subsubsection{Backpropegation}
-		Computing the gradient of $E$ with respect to the weights and biases is called ``backpropegation'' in machine learning. However, it is nothing but the multivariable chain rule. 
+		\subsection{Backpropagation}
+		Computing $\nabla E$ with respect to the weights and biases is called ``backpropagation''. However, it is nothing but the multivariable chain rule. 
 
 		That is, since
 		\[
@@ -93,165 +77,62 @@
 			\nabla_{(w, b)} E(F) = \sum_i^N 2 \abs{F(x_i) - y_i} \nabla_{(w, b)} F(x_i).
 		\]
 
-		We know how to compute the gradient of $F$ since it is a composition of affine transformations interwoven with the coordinatewise activation function. That is, the multivariabel chain rule gives
+		We know how to compute the gradient of $F$ since it is a composition of linear transformations interwoven with the coordinate-wise activation function. That is, the multivariable chain rule gives
 		\[
 			\nabla_{(w, b)} F = \nabla f \cdot \nabla A_{m - 1} \cdot \nabla f \cdot \nabla A_{m - 2} \cdot f \cdots \nabla A_1. 
 		\]
-		Computing the derivatives of affine transformations is naturally quite easy when represented as matrices. Sincen $f$ is fixed, its derivative is also easily computed. The result, then, is simply a series of matrix multiplications.
+		Computing the derivatives of affine transformations is naturally quite easy when represented as matrices. Since $f$ is fixed, its derivative is also easily computed. The result, then, is simply a series of matrix multiplications.
 
-		The process is called backpropegation because one must evaluate the derivatives starting at the output of the network and ``propegating'' the computation to the initial layers. Of course, there are algorithmic considerations when computing the matrix product, but the theory is clear.
+		The process is called backpropagation because one must evaluate the derivatives starting at the output of the network and ``propegating'' the computation to the initial layers. Of course, there are algorithmic considerations when computing the matrix product, but the theory is clear.
 
-	\subsection{Starting with a Single Neuron}
-		Abstractly, a neuron receives an input vector $\overline{x} \in \R^n$ and outputs a real number: a large positive number indicates activation, and a small negative number indicates deactive. A neural network consists of millions of such neurons, strung together carefully. 
+\section{Convolutional Neural Networks}
+In the previous sections, we discussed basic networks where each layered evaluated via $f(A_i x + b)$. Such evaluations are expensive for high dimensional feature spaces. For example, a small $100\times100$ image already has a feature space of dimension $10^4$. With many layers, the weight tuning can become intractably slow. 
 
-		% picture of neuron from neural network? Hand drawn or in Omnigraffle.
+One solution to this problem is to localize the connections between layers. That is, one evaluates some kind of ``average''. Concretely, CNNs are natural generalizations of standard neural networks. Instead of a collection of layers represented by two-tensors (matrices) $A_i$, one allows four-tensors $A_i$. The motivation is that images are naturally three-tensors since one has a two-dimensional grid of pixels, each with three color channel values. Instead of matrix multiplication $A_i x + b$ at each layer, one computes a tensor convolution. With $f$ as the element-wise activation function, $x_{mnk}$ input tensor, $A_{mnk\ell}$ weight tensor, the output layer $O_{mnk}$ is given by
+\[
+	O_{mnk}  = b_{mn} + \sum_k \sum_{m,n} A_{mn \ell k} x_{mn}
+\]
 
-		A neuron has the following parameters
+% say what a filter is
 
-		\begin{enumerate}
-			\item A shift vector $\overline{b}$for the input vector
-			\item A vector $\overline{w}$ of weights for the input vector
-			\item A mapping $f : \R \to \R$ that describes the output of the neuron (intuitively, when the neuron \textbf{activates}).
-		\end{enumerate}
+Generally the weight tensors are ``small'' in the sense that they are $3\times3$ filters. Training a CNN is almost identical to training a regular neural network. Often the initial image is sparse, and this sparsity is preserved through the layers. One can then search for a sparse representation of the weight tensors $A_{mn \ell k}$ that dramatically increases the speed of the convolution computation. Briefly, as outlined in [sparse convolution paper], the idea is to 
 
-		The output of the neuron is then simply
-		\[
-			f(\overline{w} \cdot (\overline{x} + \overline{b})).
-		\]
+% put section on sparse decomposition here
 
-		A single neuron is quite powerful and a good place to begin. One can rephrase other classifiers \cite{andrej2017} within this framework. For example, if one chooses
-		\[
-			f(t) = \frac{1}{1 + e^{-t}}
-		\]
+Though in the end we didn't use such an approach, this was the initial inspiration for the paper.
 
-		% include graph of logistic function on the right and the equation on the left
-		and tune the parameters appropriately, then one is performing \textit{logistic regression}. For real neural networks, the function
-		\[
-			f(t) = \max(0, t)
-		\]
-
-		% picture of max function on the right and equation on the left
-		is more accurate (\cite{andrej2017}). 
-
-		As a simple example, consider the problem of predicting whether a given height measurement is of a man or a woman. With the logistic function as above, one can build a simple classifier in Mathematica.
-
-		% Get some height data (or generate it) in Mathematica. Compute the loss function and generate a graph.
-
-	\subsection{A Geometric Viewpoint}
-		A neural network is a series of affine transformations combined with nonlinear squishes (sigmoid function).
-
-		Affine transformations allows us to represent any hyperplane.
-
-		Activation function allows us to bend hyperplanes.
-
-		The problem of training a neural network can be viewed as finding a best approximation in a subspace of a function space (what space exactly?)
-
-		The subspace of all possible functions represented by a neural net is what?
-
-	Note: one can view classification problems as really just trying to decompose image into basis elements. Since each row of W is a dot product against the input data, we are really detecting the high dimensional *angle* and offset. Everything is really just high dimensional geometry.
-
-	\subsection{Chaining Two Neurons}
-
-		\subsubsection{Backpropegation}
-			The multivariable chain rule propegates backwards while function composition goes forwards.
-
-		\subsection{Graph Representation}
-			Can think of every function evaluation as propegating information through a graph structure.
-
-\section{Loss Functions}
-	\subsection{Cross-Entropy Loss Function}
-
-	\subsection{Softmax}
-		Use
-		\[
-			\sum_{j \neq y_j} \max \{0, f_j - f_{y_j} + 1\}
-		\]
-
-		% insert nice visualization of this
-	\subsection{Regression}
-		Consider the $L^2$ distance.
-
-\section{Good Examples to Think About}
-	\subsection{Backpropegation}
-		Just think about multiplication and addition since it models the full dot product.
-
-	\subsection{Model neural net}
-		Toy model of a neural net:
-			Build a neural net to learn the XOR function.
-		Should be a network with only one hidden layer. How many nodes in that layer? I suppose we can choose this arbitrarily.
-
-\section{Previous Work}
-
-\section{The Problem}
-	Our goal is to train a CNN to recognize handwritten \LaTeX math symbols. This is a simple classification problem where the program assigns each sample a string with the \LaTeX character code.
-
-	% example of handwritten latex code along with the given textual code.
+\section{Problem}
+	Our goal is to train a CNN to recognize handwritten \LaTeX math symbols. We restrict ourselves to the subset of Greek characters. This is a simple classification problem where the program assigns each sample a string with the \LaTeX character code.
 
 \section{Methodology}
-		We requested the full $210,454$ samples from the author of the popular online tool Detexify which converts hand-drawn \LaTeX characters to codes [cite] using an algorithm called dynamic time warp [cite dynamic time warp]. Each sampled consists of a classification (the \LaTeX symbol code) and an array of timestamped coordinates representing the stroke pattern for a given sample. Preprocessing required converting each sample to a $200 \times 200$ grayscale image by rendering a thick line connecting the sampled points via Python Image Library [cite]. 
-
-		Restricted only to $40$ character subset.
-
-		Using the Python frameworks \textbf{Keras} and \textbf{TensorFlow}, we implemented a network with the following structure.
+		We requested $210,454$ samples from the author of the popular online tool Detexify which converts hand-drawn \LaTeX characters to codes [cite] using an algorithm called dynamic time warp [cite dynamic time warp]. Each sample consists of a classification (the \LaTeX symbol code) and an array of timestamped coordinates representing the stroke pattern for a given sample. Preprocessing required the following:
+		\begin{enumerate}
+			\item Extracting the data from PostgreSQL to MongoDB for use with Python [cite MongoDB]
+			\item Rendering the timestamped stroke pattern to a $28\times28$ image using the Python Image Library [cite]
+			\item Converting the image to a Python NumPy array [cite numpy]
+		\end{enumerate}
+		
+		We choose the image size $28\times28$ following the classic MNIST [cite] dataset of handwritten digits. We then constructed a three-layer CNN with $32$ and $64$ filters respectively. There is one final dense layer (non-CNN) consisting of $128$ nodes (a matrix $A_i$ mapping from a $64$ dimensional space to a $128$ dimensional space).
+		
+		The following code using the popular Python neural network framework Keras [cite] shows the network construction (we used example code from the framework) [cite]:
+		
+		\begin{lstlisting}[language=Python]
+model.add(Conv2D(32, kernel_size=(3, 3),
+                 activation='relu',
+                 input_shape=input_shape))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation='softmax'))
+		\end{lstlisting}
 
 		% Diagram of the network we implemented. Can we just do a network with no hidden layers? Probably
+		Focusing only on Greek characters, we reduced our dataset to  $28,784$ training samples. Of those, we held $7,196$ for network validation. After twelve training iterations with a batch size of $128$ (one feeds in $128$ samples before updating the weights), we achieved accuracy (as validated by our reserved set of samples) of $87\%$. 
 
-		We reserved one quarter of the data to test generalizability and trained the network on the remainder. The following figure shows our loss function on the training data
-
-		% Loss function figure
-
-		The accuracy on the out of sample data was $100\%$
-
-	\subsection{Evaluation of a Network with Linear Algebra}
-		For nodes in the same layer, put each set of weights into a matrix $W$ as rows padding with zeros as necessary (will be sparse)?. Columns will correspond to number of inputs to the entire layer (sum total of number of inputs to each node).
-
-		Then when layer $i$ receives input vector $x_i$, compute weighting and biasing as $W \cdot x_i + b$ where $b$ is a vector of biases.
-
-		Finally, do the nonlinear transformation via the activation function $\sigma$ (element-wise) as $\sigma(W \cdot x_i + b)$.
-
-		Can chain layers together by composing this operation.
-
-		Each layer can thus be seen as an affine transformation followed by a nonlinear squish in each coordinate.
-
-		This is apparently enough to represent a large family of continuous functions.
-
-	\subsection{Density of neural networks}
-
-\section{Convolution Neural Networks}
-
-\subsection{Why are CNNs different than vanilla CNN?}
-1. "better" in some ill-defined sense. I assume classification accuracy?
-2. General idea appears to be that
-
-\section{Exploiting Sparsity in Convolutional Neural Networks}
-
-	\subsection{Training the Network}
-
-	\subsection{Cost of Accuracy}
-
-\section{Results}
-With $21,588$ training samples and $7,196$ testing samples and after $12$ epochs the network achieved $87\%$ accuracy with a loss (categorical cross entropy [cite]) of $.412$.
-
-We used stochastic gradient descent [cite].
-
-Unknown how this compares to the Haskell accuracy. Future direction would be to compare.
-
-
-
-
-\section{Questions while learning}
-1. How to select proper activation function?
-2. How can one rephrase this problem mathematically?
-3. Why can't neurons have multiple outputs?
-4. Are there results connecting the number of samples with the accuracy / generalizability of the network?
-
-\section{Reproducible Research Questions}
-
-1. What did I do?
-2. Why did I do it?
-3. How did I set up everything at the time of the analysis?
-4. When did I make changes, and what were they?
-5. Who needs to access it, and how can I get it to them?
+\section{Conclusion}
 
 \section{References}
 ConvNetJS (playground for neural nets)
