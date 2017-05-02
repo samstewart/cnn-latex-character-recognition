@@ -11,7 +11,7 @@
 \usepackage{amssymb}
 \usepackage{marginnote}
 \usepackage{float}
-
+\usepackage{url}
 
 \input{macros.tex}
 
@@ -24,10 +24,10 @@
 
 \author{Samuel Stewart}
 \title{Recognizing Mathematical Symbols with a Sparse CNN}
-\maketitle
+
 % TODO: employ roman numerals in the problem 
 \begin{document}
-
+\maketitle
 \section{Problem}
 	Goal: beat prediction accuracy \emph{and} speed of Haskell backend using dynamic time warp.
 
@@ -190,7 +190,9 @@
 \section{Methodology}
 		We requested the full $210,454$ samples from the author of the popular online tool Detexify which converts hand-drawn \LaTeX characters to codes [cite] using an algorithm called dynamic time warp [cite dynamic time warp]. Each sampled consists of a classification (the \LaTeX symbol code) and an array of timestamped coordinates representing the stroke pattern for a given sample. Preprocessing required converting each sample to a $200 \times 200$ grayscale image by rendering a thick line connecting the sampled points via Python Image Library [cite]. 
 
-		Using the Python frameworks \textbf{Lasagne} and \textbf{nolearn}, we implemented a network with the following structure
+		Restricted only to $40$ character subset.
+
+		Using the Python frameworks \textbf{Keras} and \textbf{TensorFlow}, we implemented a network with the following structure.
 
 		% Diagram of the network we implemented. Can we just do a network with no hidden layers? Probably
 
@@ -199,9 +201,6 @@
 		% Loss function figure
 
 		The accuracy on the out of sample data was $100\%$
-
-	\section{Network Structure}
-		For the basic network, we have a series of 
 
 	\subsection{Evaluation of a Network with Linear Algebra}
 		For nodes in the same layer, put each set of weights into a matrix $W$ as rows padding with zeros as necessary (will be sparse)?. Columns will correspond to number of inputs to the entire layer (sum total of number of inputs to each node).
@@ -230,6 +229,16 @@
 
 	\subsection{Cost of Accuracy}
 
+\section{Results}
+With $21,588$ training samples and $7,196$ testing samples and after $12$ epochs the network achieved $87\%$ accuracy with a loss (categorical cross entropy [cite]) of $.412$.
+
+We used stochastic gradient descent [cite].
+
+Unknown how this compares to the Haskell accuracy. Future direction would be to compare.
+
+
+
+
 \section{Questions while learning}
 1. How to select proper activation function?
 2. How can one rephrase this problem mathematically?
@@ -246,7 +255,7 @@
 
 \section{References}
 ConvNetJS (playground for neural nets)
-http://cs.stanford.edu/people/karpathy/convnetjs/
+\url{http://cs.stanford.edu/people/karpathy/convnetjs/}
 
 andrej2017
 Andrej Karpathy. http://cs231n.github.io/neural-networks-1/
@@ -254,15 +263,15 @@ Andrej Karpathy. http://cs231n.github.io/neural-networks-1/
 (Spatially-sparse convolutional neural networks) https://arxiv.org/abs/1409.6070
 
 VisTrails workflow management
-https://www.vistrails.org/index.php/Main_Page
+\url{https://www.vistrails.org/index.php/Main_Page}
 
 Proof of universality of neural networks:
-http://neuralnetworksanddeeplearning.com/chap4.html
+\url{http://neuralnetworksanddeeplearning.com/chap4.html}
 
 
 Pandas for data cleaning
 
-http://t-redactyl.io/blog/2016/10/a-crash-course-in-reproducible-research-in-python.html
+\url{http://t-redactyl.io/blog/2016/10/a-crash-course-in-reproducible-research-in-python.html}
 
 IPython
 https://ipython.org/documentation.html
