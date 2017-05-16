@@ -32,7 +32,7 @@
 \maketitle
 
 \begin{abstract}
-Inspired by a recent application of sparse matrix multiplication [cite sparse paper],  we build a simple convolution neural network for recognizing a subset of LaTeX characters. Using a training set obtained from the author of the popular web tool ``Detexify,'' our network achieves $87\%$ accuracy. In this paper, we discuss basic neural networks, their generalization to convolutional neural networks, and the application of sparse decompositions.
+Inspired by a recent application of sparse matrix multiplication \cite{bao2015} to neural networks,  we build a simple convolution neural network for recognizing a subset of LaTeX characters. Using a training set obtained from the author of the popular web tool ``Detexify'' \cite{detexify} our network achieves $87\%$ accuracy. In this paper, we discuss basic neural networks, their generalization to convolutional neural networks, and the application of sparse decompositions.
 \end{abstract}
 
 \section{Mathematics of Neural Networks}
@@ -40,20 +40,19 @@ Inspired by a recent application of sparse matrix multiplication [cite sparse pa
 	\subsubsection{Constructing a Neural Network}
 	Dispensing with the oversimplifying analogies with the wonderfully complex human brain, one can view a neural network as a function defined by two things:
 	\begin{enumerate}
-		\item An nonlinear ``activation function'' $f : \R \to [0, 1]$ (common functions include $f(x) = \max(x, 0)$ or $f(x) = 1 / (1 + e^{-x})$
-		\item A series of transforms $A_i x + b$ where $A_i$ are matrices representing linear operators between a series of spaces of vary dimension.
+		\item An nonlinear ``activation function'' $f : \R \to [0, 1]$ (common functions include $f(x) = \max(x, 0)$ or $f(x) = 1 / (1 + e^{-x})$.
+		\item A series of transforms $A_i x + b$ where $A_i$ are matrices representing linear operators between a series of spaces of varying dimensions.
 	\end{enumerate}
 	Then the neural network is a map $F : \R^n \to \R^\ell$ given by the composition of the nonlinear activation function and the linear operators
 	\[
-		F = f  \circ A_m \circ A_{m - 1} \circ f \circ A_{m - 2} \circ \cdots \circ A_1
+		F = f  \circ A_m \circ f \circ A_{m - 1} \circ f \circ A_{m - 2} \circ \cdots f \circ A_1
 	\]
-	where it is understood that $f$ acts coordinate-wise on the output of each linear transformation. 
-	From a probabilistic point of view, the output $F(x) \in \R^\ell$ represents the probabilities that an object with features $x \in \R^n$ lies in each of $\ell$ classes.
+	where it is understood that $f$ acts coordinate-wise on the output of each linear transformation. The output $F(x) \in \R^\ell$ represents the probabilities that an object with features $x \in \R^n$ lies in each of $\ell$ classes.
 	
-	The addition of the activation function $f$ enables fitting of \textit{nonlinear} boundaries between the training points. In applications, one \textit{chooses} an activation function $f$ (discussed below) and then attempts to \textit{learn} the ``best'' (as measured by some energy functional) series of linear transformations for a given set of training data. The machine learning literature calls this process ``weight tuning,'' ``training,'' or ``backpropagation.'' In the literature, for every linear transformation $A_i x + b$, the matrix $A_i$ contains the ``weights'' and the vector $b$ the ``biases.'' The number of linear transformations $A_i$ is the number of ``layers'' of the neural network. More layers correspond to better approximations of the learned function, though the relationship is poorly understood in general. Deep learning is nothing but many layers and thus many weights one must tune.
+	The addition of the activation function $f$ enables fitting of \textit{nonlinear} boundaries between the training points. In applications, one \textit{chooses} an activation function $f$ (discussed below) and then attempts to \textit{learn} the ``best'' (as measured by some energy functional) series of linear transformations for a given set of training data. The machine learning literature calls this process ``weight tuning,'' ``training,'' or ``backpropagation.'' In the literature, for every linear transformation $A_i x + b$, the matrix $A_i$ contains the ``weights'' and the vector $b$ the ``biases.'' The number of linear transformations $A_i$ is the number of ``layers'' of the neural network. More layers correspond to better approximations of the learned function, though the relationship is poorly understood in general. Deep learning is nothing but many layers and thus many weights.
 	
 	\subsection{Training a Neural Network}
-	It was shown in [1990?] that one can approximate a function $G$ with a neural network $F$ [cite universality paper]. In the machine learning language, given a large enough training set, one can ``learn'' the underlying classification $G$ to arbitrary accuracy. However, just as indicator functions are dense in $L^2$, this result is of limited practical use since it does not answer questions of convergence.
+	It was shown in the nineties that one can approximate a function $G$ with a neural network $F$ \cite{cybenko1989}. In the machine learning language, given a large enough training set, one can ``learn'' the underlying classification $G$ to arbitrary accuracy. However, just as indicator functions are dense in $L^2$, this result is of limited practical use since it does not answer questions of convergence.
 
 	In practice, one trains a neural by minimizing some loss function $E(F) : \R$ that measures how will the network ``fits'' the given training data.
 
@@ -62,59 +61,54 @@ Inspired by a recent application of sparse matrix multiplication [cite sparse pa
 		E(F) = \sum_i^N \abs{F(x_i) - y_i}^2.
 	\]
 
-	Training is then quite simple: find the neural network $F$ that \textit{minimizes} $E$.
-
-	A common approach is to apply some form of the \textit{gradient descent} algorithm.
+	Training is then quite simple: find the neural network $F$ that \textit{minimizes} $E$. A common approach is to apply some form of the \textit{gradient descent} algorithm.
 		\subsection{Backpropagation}
-		Computing $\nabla E$ with respect to the weights and biases is called ``backpropagation''. However, it is nothing but the multivariable chain rule. 
+		Computing $\nabla E$ with respect to the weights and biases is called ``backpropagation'' and is nothing but the multivariable chain rule. 
 
-		That is, since
-		\[
-			E(F) = \sum_i^N \abs{F(x_i) - y_i}^2
-		\]
-		then with $(w,b)$ a vector of all the weights and biases, we have
+		That is, since with $(w,b)$ a vector of all the weights and biases, we have
 		\[
 			\nabla_{(w, b)} E(F) = \sum_i^N 2 \abs{F(x_i) - y_i} \nabla_{(w, b)} F(x_i).
 		\]
 
 		We know how to compute the gradient of $F$ since it is a composition of linear transformations interwoven with the coordinate-wise activation function. That is, the multivariable chain rule gives
 		\[
-			\nabla_{(w, b)} F = \nabla f \cdot \nabla A_{m - 1} \cdot \nabla f \cdot \nabla A_{m - 2} \cdot f \cdots \nabla A_1. 
+			\nabla_{(w, b)} F = \nabla f \cdot \nabla A_{m - 1} \cdot \nabla f \cdot \nabla A_{m - 2} \cdot \nabla f \cdots \nabla A_1. 
 		\]
-		Computing the derivatives of affine transformations is naturally quite easy when represented as matrices. Since $f$ is fixed, its derivative is also easily computed. The result, then, is simply a series of matrix multiplications.
-
-		The process is called backpropagation because one must evaluate the derivatives starting at the output of the network and ``propegating'' the computation to the initial layers. Of course, there are algorithmic considerations when computing the matrix product, but the theory is clear.
+		Computing the derivatives of linear transformations is easy and $f$ also has a simple piecewise derivative. The entire process is just a series of matrix multiplications. Of course, there are algorithmic considerations when doing this computatoin, but the theory is clear.
 
 \section{Convolutional Neural Networks}
 In the previous sections, we discussed basic networks where each layered evaluated via $f(A_i x + b)$. Such evaluations are expensive for high dimensional feature spaces. For example, a small $100\times100$ image already has a feature space of dimension $10^4$. With many layers, the weight tuning can become intractably slow. 
 
-One solution to this problem is to localize the connections between layers. That is, one evaluates some kind of ``average''. Concretely, CNNs are natural generalizations of standard neural networks. Instead of a collection of layers represented by two-tensors (matrices) $A_i$, one allows four-tensors $A_i$. The motivation is that images are naturally three-tensors since one has a two-dimensional grid of pixels, each with three color channel values. Instead of matrix multiplication $A_i x + b$ at each layer, one computes a tensor convolution. With $f$ as the element-wise activation function, $x_{mnk}$ input tensor, $A_{mnk\ell}$ weight tensor, the output layer $O_{mnk}$ is given by
+One solution to this problem is to localize the connections between layers. That is, one evaluates some kind of ``average''. Concretely, CNNs are natural generalizations of standard neural networks. Instead of a collection of layers represented by two-tensors (matrices) $A_i$, one allows four-tensors. The motivation is that images are naturally three-tensors since one has a two-dimensional grid of pixels, each with three color channel values. Instead of matrix multiplication $A_i x + b$ at each layer, one computes a tensor convolution. With $f$ as the element-wise activation function, $x_{mnk}$ input tensor, $A_{mnk\ell}$ weight tensor, the output layer $O_{mnk}$ is given by
 \[
-	O_{mnk}  = b_{mn} + \sum_k \sum_{m,n} A_{mn \ell k} x_{mn}
+	O_{ijk}  = b_{mn} + \sum_\ell \sum_{m,n} A_{mn \ell k} x_{i + m - 1, j + n - 1, \ell}
 \]
 
-% say what a filter is
+The four-tensor $A_{mn\ell k}$ contains $\ell = 1, \ldots, r$ ``filters'' just as a node in a neural network has a set of scalar weights. One can then again arrange these convolutional ``layers'' (each consisting of several ``filters'') into a complete neural network (even intertwining with classic or ``dense'' neural network layers).
 
-Generally the weight tensors are ``small'' in the sense that they are $3\times3$ filters. Training a CNN is almost identical to training a regular neural network. Often the initial image is sparse, and this sparsity is preserved through the layers. One can then search for a sparse representation of the weight tensors $A_{mn \ell k}$ that dramatically increases the speed of the convolution computation. Briefly, as outlined in [sparse convolution paper], the idea is to 
-
-% put section on sparse decomposition here
-
-Though in the end we didn't use such an approach, this was the initial inspiration for the paper.
-
+Generally the weight tensors are ``small'' in the sense that they are $3\times3$ filters. Training a CNN is almost identical to training a regular neural network. Often the initial image is sparse, and this sparsity is preserved through the layers. One can then search for a sparse representation $S$ of the weight tensors $A_{mn \ell k}$ and sparse representation $T$ of the input that dramatically increases the speed of the convolution computation. Each output layer then becomes
+\[
+	O \approx b + S \ast T
+\]
+where $S$ is sparse and $S \ast T$ represents sparse convolution. As in \cite{bao2015}, to find the decomposition $S, T$, one solves the following minimization problem
+\[
+	\min_{S, T} E + \lambda_1 \sum_i \norm{S}_1 + \lambda_2 \sum_{i, j} \norm{S}_2 \quad \text{s.t. } \norm{T}_2 \leq 1
+\]
+where $E$ is the loss of the network (described earlier). In the end we didn't use such an approach since our dataset was small and the accuracy loss was not worth the speed gain.
 \section{Problem}
 	Our goal is to train a CNN to recognize handwritten \LaTeX math symbols. We restrict ourselves to the subset of Greek characters. This is a simple classification problem where the program assigns each sample a string with the \LaTeX character code.
 
 \section{Methodology}
-		We requested $210,454$ samples from the author of the popular online tool Detexify which converts hand-drawn \LaTeX characters to codes [cite] using an algorithm called dynamic time warp [cite dynamic time warp]. Each sample consists of a classification (the \LaTeX symbol code) and an array of timestamped coordinates representing the stroke pattern for a given sample. Preprocessing required the following:
+		We requested $210,454$ samples from the author of the popular online tool Detexify \cite{detexify} which converts hand-drawn \LaTeX characters to codes using an algorithm called dynamic time warp \cite{donald1994}. Each sample consists of a classification (the \LaTeX symbol code) and an array of timestamped coordinates representing the stroke pattern for a given sample. Preprocessing required the following:
 		\begin{enumerate}
-			\item Extracting the data from PostgreSQL to MongoDB for use with Python [cite MongoDB]
-			\item Rendering the timestamped stroke pattern to a $28\times28$ image using the Python Image Library [cite]
-			\item Converting the image to a Python NumPy array [cite numpy]
+			\item Extracting the data from PostgreSQL to MongoDB for use with Python \cite{mongodb}.
+			\item Rendering the timestamped stroke pattern to a $28\times28$ image using the Python Image Library \cite{pil}.
+			\item Converting the image to a Python NumPy array \cite{numpy}.
 		\end{enumerate}
 		
-		We choose the image size $28\times28$ following the classic MNIST [cite] dataset of handwritten digits. We then constructed a three-layer CNN with $32$ and $64$ filters respectively. There is one final dense layer (non-CNN) consisting of $128$ nodes (a matrix $A_i$ mapping from a $64$ dimensional space to a $128$ dimensional space).
+		We choose the image size $28\times28$ following the classic MNIST \cite{mnist} dataset of handwritten digits. We then constructed a three-layer CNN with $32$ and $64$ filters respectively. There is one final dense layer (non-CNN) consisting of $128$ nodes (a matrix $A_i$ mapping from a $64$ dimensional space to a $128$ dimensional space).
 		
-		The following code using the popular Python neural network framework Keras [cite] shows the network construction (we used example code from the framework) [cite]:
+		The following code using the popular Python neural network framework Keras \cite{keras} shows the network construction (we used example code from the framework) \cite{kerasMnist}:
 		
 		\begin{lstlisting}[language=Python]
 model.add(Conv2D(32, kernel_size=(3, 3),
@@ -129,31 +123,14 @@ model.add(Dropout(0.5))
 model.add(Dense(num_classes, activation='softmax'))
 		\end{lstlisting}
 
-		% Diagram of the network we implemented. Can we just do a network with no hidden layers? Probably
-		Focusing only on Greek characters, we reduced our dataset to  $28,784$ training samples. Of those, we held $7,196$ for network validation. After twelve training iterations with a batch size of $128$ (one feeds in $128$ samples before updating the weights), we achieved accuracy (as validated by our reserved set of samples) of $87\%$. 
+		Focusing only on Greek characters, we reduced our dataset to  $28,784$ training samples. Of those, we held $7,196$ for network validation. After twelve training iterations with a batch size of $128$ (one feeds in $128$ samples before updating the weights), we achieved accuracy (as validated by our reserved set of samples) of $87\%$. The code is available on GitHub \cite{mycodebase}.
 
-\section{Conclusion}
+\section{Future Work}
+The popular Keras library does not have sparse CNN. A nice project would be to implement the method in \cite{bao2015} and share it with the open source community.
 
-\section{References}
-ConvNetJS (playground for neural nets)
-\url{http://cs.stanford.edu/people/karpathy/convnetjs/}
-
-andrej2017
-Andrej Karpathy. http://cs231n.github.io/neural-networks-1/
-
-(Spatially-sparse convolutional neural networks) https://arxiv.org/abs/1409.6070
-
-VisTrails workflow management
-\url{https://www.vistrails.org/index.php/Main_Page}
-
-Proof of universality of neural networks:
-\url{http://neuralnetworksanddeeplearning.com/chap4.html}
+As for recognizing Greek characters, we could extend the above process to \textit{all} \LaTeX characters with minimal effort besides additional computation. We should compare the accuracy of the CNN classifier to the dynamic timewarp in the original Detexify.
 
 
-Pandas for data cleaning
+\input{bib_ordered.tex}
 
-\url{http://t-redactyl.io/blog/2016/10/a-crash-course-in-reproducible-research-in-python.html}
-
-IPython
-https://ipython.org/documentation.html
 \end{document}
